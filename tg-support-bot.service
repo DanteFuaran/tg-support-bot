@@ -1,0 +1,15 @@
+[Unit]
+Description=tg-support-bot
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/dfc-online/tg-support-bot
+Environment=PATH=/dfc-online/tg-support-bot/.venv/bin
+ExecStart=/dfc-online/tg-support-bot/.venv/bin/python3 run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
