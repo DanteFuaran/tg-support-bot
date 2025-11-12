@@ -77,10 +77,15 @@ fi
 # === 1️⃣ СИСТЕМА (без зависаний)
 #
 
-apt update -y >/dev/null 2>&1 &
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -y >/dev/null 2>&1 &
 show_spinner "Обновление списка пакетов"
 
-apt upgrade -y >/dev/null 2>&1 &
+apt-get upgrade -y \
+  -o Dpkg::Options::="--force-confdef" \
+  -o Dpkg::Options::="--force-confold" \
+  >/dev/null 2>&1 &
 show_spinner "Обновление установленных пакетов"
 
 #
