@@ -1,8 +1,14 @@
 #!/bin/bash
-# version: 4.1 (Enhanced CLI + config editing + clean output)
+# version: 4.2 (Non-interactive apt + Enhanced CLI + clean output)
 
 set -e
 exec < /dev/tty
+
+# 🛠 Глушим любые вопросы от apt/tzdata/needrestart
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+APT_INSTALL_OPTS="-y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold"
 
 # 🎨 Цвета
 RED='\033[0;31m'
@@ -74,10 +80,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 1️⃣ Система
-export DEBIAN_FRONTEND=noninteractive
-(apt update -y -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Обновление списка пакетов"
-(apt upgrade -y -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Обновление установленных пакетов"
-
+(apt-get update -yq >/dev/null 2>&1) & show_spinner "Обновление списка пакетов"
+(apt-get upgrade $APT_INSTALL_OPTS >/dev/null 2>&1) & show_spinner "Обновление установленных пакетов"
 
 # 2️⃣ Зависимости
 DEPENDENCIES=("python3" "python3-pip" "python3-venv" "git" "curl" "wget")
@@ -85,7 +89,7 @@ for pkg in "${DEPENDENCIES[@]}"; do
   if dpkg -s "$pkg" &>/dev/null; then
     print_action "$pkg уже установлен"
   else
-    (apt install -y "$pkg" -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Установка $pkg"
+    (apt-get install $APT_INSTALL_OPTS "$pkg" >/dev/null 2>&1) & show_spinner "Установка $pkg"
   fi
 done
 (show_spinner "Проверка установленных пакетов") &
@@ -262,7 +266,6 @@ edit_env() {
   esac
 }
 
-
 delete_bot_files() {
   echo -e "\n${RED}⚠ Полное удаление бота и всех файлов...${NC}"
   systemctl stop "$SERVICE" 2>/dev/null || true
@@ -321,7 +324,6 @@ while true; do
     *) echo -e "${RED}⚠ Неверный выбор${NC}"; sleep 1;;
   esac
 done
-
 EOF
 ) & show_spinner "Создание панели управления"
 chmod +x "$CLI_FILE"
@@ -359,4 +361,3 @@ echo -e "\n${BLUE}==========================================${NC}"
 echo -e "${GREEN}    🎉 УСТАНОВКА ЗАВЕРШЕНА УСПЕШНО! ${NC}"
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${BLUE}Меню управления ботом:${NC} ${YELLOW}tg-support-bot${NC}\n"
-
