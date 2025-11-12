@@ -266,7 +266,7 @@ show_menu() {
   echo -e "${BLUE}==============================${NC}"
   echo -e "${DARKGRAY}Текущие настройки${NC}"
   echo -e "🔑 Токен:        ${YELLOW}$(get_env BOT_TOKEN)${NC}"
-  echo -e "🆔 ID группы:   ${YELLOW}$(get_env SUPPORT_GROUP_ID)${NC}"
+  echo -e "🆔 ID группы:    ${YELLOW}$(get_env SUPPORT_GROUP_ID)${NC}"
   echo -e "⏱️  Автозакрытие: ${YELLOW}$(get_env INACTIVITY_DAYS) дней${NC}"
   echo -e "${DARKGRAY}------------------------------${NC}"
   echo -e "${DARKGRAY}Управление${NC}"
@@ -283,7 +283,7 @@ show_menu() {
   echo -e "${DARKGRAY}Глобально${NC}"
   echo -e "8.  Переустановить бота"
   echo -e "9.  Удалить бота"
-  echo -е "${DARKGRAY}------------------------------${NC}"
+  echo -e "${DARKGRAY}------------------------------${NC}"
   echo -e "0.  Выход"
   echo -e "${BLUE}==============================${NC}"
 }
