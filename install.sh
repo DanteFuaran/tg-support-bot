@@ -74,8 +74,10 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # 1️⃣ Система
-(apt update -y >/dev/null 2>&1) & show_spinner "Обновление списка пакетов"
-(apt upgrade -y >/dev/null 2>&1) & show_spinner "Обновление установленных пакетов"
+export DEBIAN_FRONTEND=noninteractive
+(apt update -y -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Обновление списка пакетов"
+(apt upgrade -y -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Обновление установленных пакетов"
+
 
 # 2️⃣ Зависимости
 DEPENDENCIES=("python3" "python3-pip" "python3-venv" "git" "curl" "wget")
@@ -83,7 +85,7 @@ for pkg in "${DEPENDENCIES[@]}"; do
   if dpkg -s "$pkg" &>/dev/null; then
     print_action "$pkg уже установлен"
   else
-    (apt install -y "$pkg" >/dev/null 2>&1) & show_spinner "Установка $pkg"
+    (apt install -y "$pkg" -o Dpkg::Options::="--force-confnew" >/dev/null 2>&1) & show_spinner "Установка $pkg"
   fi
 done
 (show_spinner "Проверка установленных пакетов") &
