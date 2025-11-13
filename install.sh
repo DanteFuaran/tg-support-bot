@@ -250,8 +250,8 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR
-Environment=PATH=$INSTALL_DIR/.venv/bin
-ExecStart=$INSTALL_DIR/.venv/bin/python $INSTALL_DIR/run.py
+Environment="PATH=$INSTALL_DIR/.venv/bin:/usr/bin:/bin"
+ExecStart=/dfc-online/tg-support-bot/.venv/bin/python /dfc-online/tg-support-bot/run.py
 Restart=always
 RestartSec=5
 
