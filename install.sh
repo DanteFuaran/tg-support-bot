@@ -249,8 +249,9 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=$INSTALL_DIR
-Environment="PATH=$INSTALL_DIR/.venv/bin:/usr/bin:/bin"
+WorkingDirectory=/dfc-online/tg-support-bot
+Environment="VIRTUAL_ENV=/dfc-online/tg-support-bot/.venv"
+Environment="PATH=/dfc-online/tg-support-bot/.venv/bin:/usr/bin:/bin"
 ExecStart=/dfc-online/tg-support-bot/.venv/bin/python /dfc-online/tg-support-bot/run.py
 Restart=always
 RestartSec=5
