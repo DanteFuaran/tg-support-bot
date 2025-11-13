@@ -76,32 +76,30 @@ echo
 # URL файла с хешами ключей
 KEYS_URL="https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/license"
 
+
 # Функция проверки ключа
 validate_license_key() {
     local input_key="$1"
     local key_hash
     
-    # Генерируем SHA256 хеш от введенного ключа
     key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
+    remote_hashes=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | sed 's/[[:space:]]*$//')
     
-    # Получаем ВСЕ хеши из файла и проверяем каждый
-    local remote_hashes
-    remote_hashes=$(curl -fsSL "$KEYS_URL")
+    echo "=== ОТЛАДКА ==="
+    echo "Ключ: $input_key"
+    echo "Хеш ключа: $key_hash"
+    echo "Количество хешей в файле: $(echo "$remote_hashes" | wc -l)"
+    echo "Первые 3 хеша в файле:"
+    echo "$remote_hashes" | head -3
+    echo "=== КОНЕЦ ОТЛАДКИ ==="
     
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Ошибка: Не удалось загрузить файл ключей${NC}"
+    if echo "$remote_hashes" | grep -q "^$key_hash$"; then
+        echo "✅ Хеш найден в файле!"
+        return 0
+    else
+        echo "❌ Хеш НЕ найден в файле!"
         return 1
     fi
-    
-    # Проверяем наличие хеша в списке (очищаем каждую строку)
-    while IFS= read -r line; do
-        clean_line=$(echo "$line" | tr -d '\r' | sed 's/[[:space:]]*$//')
-        if [ "$key_hash" = "$clean_line" ]; then
-            return 0
-        fi
-    done <<< "$remote_hashes"
-    
-    return 1
 }
 
 
