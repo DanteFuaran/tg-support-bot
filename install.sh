@@ -84,21 +84,24 @@ validate_license_key() {
     # Генерируем SHA256 хеш от введенного ключа
     key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
     
-    # Получаем все хеши и проверяем наличие
+    # Получаем ВСЕ хеши из файла и проверяем каждый
     local remote_hashes
-    remote_hashes=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | sed 's/[[:space:]]*$//')
+    remote_hashes=$(curl -fsSL "$KEYS_URL")
     
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ Ошибка: Не удалось загрузить файл ключей${NC}"
         return 1
     fi
     
-    # Проверяем наличие хеша в списке
-    if echo "$remote_hashes" | grep -q "^$key_hash$"; then
-        return 0
-    else
-        return 1
-    fi
+    # Проверяем наличие хеша в списке (очищаем каждую строку)
+    while IFS= read -r line; do
+        clean_line=$(echo "$line" | tr -d '\r' | sed 's/[[:space:]]*$//')
+        if [ "$key_hash" = "$clean_line" ]; then
+            return 0
+        fi
+    done <<< "$remote_hashes"
+    
+    return 1
 }
 
 
