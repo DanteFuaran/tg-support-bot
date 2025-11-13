@@ -100,7 +100,7 @@ while [ $attempts_left -gt 0 ]; do
 
     KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
 
-
+    # Проверяем хеш напрямую из GitHub без скачивания файла
     if curl -fsSL "$KEYS_URL" | grep -Fxq "$KEY_HASH"; then
         echo -e "${GREEN}✔ Ключ подтверждён.${NC}"
         break
@@ -114,6 +114,7 @@ if [ $attempts_left -eq 0 ]; then
     echo -e "${RED}❌ Лимит попыток исчерпан. Установка остановлена.${NC}"
     exit 1
 fi
+
 
 
 
