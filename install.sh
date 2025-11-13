@@ -69,6 +69,7 @@ echo -e "${BLUE}==========================================${NC}\n"
 
 
 # === Проверка лицензионного ключа ===
+echo
 echo -e "Для продолжения установки введите лицензионный ключ"
 echo -e "Если хотите прервать установку — нажмите Ctrl + C"
 echo
@@ -84,17 +85,8 @@ validate_license_key() {
     # Генерируем SHA256 хеш от введенного ключа
     key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
     
-    # Получаем все хеши из файла
-    local remote_hashes
-    remote_hashes=$(curl -fsSL "$KEYS_URL")
-    
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Ошибка: Не удалось загрузить файл ключей${NC}"
-        return 1
-    fi
-    
-    # Проверяем наличие хеша в списке
-    if echo "$remote_hashes" | tr -d '\r' | grep -q "^$key_hash$"; then
+    # Проверяем напрямую с GitHub (без сохранения файла)
+    if curl -fsSL "$KEYS_URL" | grep -q "^$key_hash$"; then
         return 0
     else
         return 1
@@ -106,8 +98,9 @@ attempts_left=$MAX_ATTEMPTS
 KEY_VALIDATED=0
 
 while [ $attempts_left -gt 0 ] && [ $KEY_VALIDATED -eq 0 ]; do
-    safe_read "${YELLOW}Введите лицензионный ключ (осталось попыток: $attempts_left):${NC} " LICENSE_KEY
-
+    echo -ne "${YELLOW}Введите лицензионный ключ (осталось попыток: $attempts_left):${NC} "
+    read LICENSE_KEY
+    
     if validate_license_key "$LICENSE_KEY"; then
         echo -e "${GREEN}✅ Лицензионный ключ подтверждён${NC}"
         KEY_VALIDATED=1
