@@ -39,7 +39,7 @@ ___
 ## 🚀 Скрипт автоматической установки
 > `Полная установка одной командой`
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/test/install.sh)
 ```
 
 ### 📦 Что делает скрипт:
