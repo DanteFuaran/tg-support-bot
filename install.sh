@@ -75,16 +75,14 @@ mkdir -p "$INSTALL_DIR"
 KEY_FILE="$INSTALL_DIR/keys.sha256"
 KEYS_URL="https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/keys.sha256"
 
-echo -e "${BLUE}⬇️ Загрузка файла ключей...${NC}"
+echo -e "${BLUE}⬇️ Проверка ключа лицензии...${NC}"
 
 if ! curl -fsSL "$KEYS_URL" -o "$KEY_FILE"; then
-    echo -e "${RED}❌ Ошибка: не удалось скачать keys.sha256${NC}"
-    echo -e "${YELLOW}Проверьте доступность ссылки: $KEYS_URL${NC}"
+    echo -e "${RED}❌ Ошибка: не удалось подключиться к серверу${NC}"
     exit 1
 fi
 
 chmod 600 "$KEY_FILE"
-echo -e "${GREEN}✔ Файл ключей загружен${NC}\n"
 
 # === Проверка ключа ===
 echo -e "${BLUE}🔐 Для продолжения требуется ключ активации.${NC}"
