@@ -85,35 +85,36 @@ fi
 chmod 600 "$KEY_FILE"
 
 # === Проверка ключа ===
-echo -e "${BLUE}🔐 Для продолжения требуется ключ активации.${NC}"
-echo -e "${YELLOW}Если хотите прервать ввод ключа — нажмите Ctrl + C${NC}\n"
+echo
+echo -e "🔐 Для продолжения требуется ключ активации."
+echo -e "Если хотите прервать ввод ключа — нажмите Ctrl + C"
+echo
 
-attempts=0
-max_attempts=10
+KEYS_URL="https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/keys.sha256"
 
-while (( attempts < max_attempts )); do
-    remaining=$((max_attempts - attempts))
+MAX_ATTEMPTS=10
+attempts_left=$MAX_ATTEMPTS
 
-    printf "\rВведите ключ (осталось попыток: $remaining): "
-    IFS= read -r KEY
+while [ $attempts_left -gt 0 ]; do
+    read -p "Введите ключ (осталось попыток: $attempts_left): " KEY
 
     KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
 
-    if grep -Fxq "$KEY_HASH" "$KEY_FILE"; then
-        echo -e "\n${GREEN}✔ Ключ подтверждён! Установка продолжается.${NC}\n"
+
+    if curl -fsSL "$KEYS_URL" | grep -Fxq "$KEY_HASH"; then
+        echo -e "${GREEN}✔ Ключ подтверждён.${NC}"
         break
     fi
 
-    attempts=$((attempts+1))
-    printf "\r\033[K${RED}❌ Неверный ключ.${NC}\n"
-    sleep 0.4
+    attempts_left=$((attempts_left - 1))
+    echo -en "\r${RED}❌ Неверный ключ.${NC}\n"
 done
 
-if (( attempts >= max_attempts )); then
+if [ $attempts_left -eq 0 ]; then
     echo -e "${RED}❌ Лимит попыток исчерпан. Установка остановлена.${NC}"
-    rm -rf "$INSTALL_DIR"
     exit 1
 fi
+
 
 
 
