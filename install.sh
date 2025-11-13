@@ -68,36 +68,58 @@ echo -e "${GREEN}   🚀 УСТАНОВКА TELEGRAM SUPPORT BOT${NC}"
 echo -e "${BLUE}==========================================${NC}\n"
 
 
-# === Проверка ключа ===
+# === Проверка лицензионного ключа ===
 echo
-echo -e "🔐 Для продолжения требуется ключ активации. (ТЕСТ 2)"
+echo -e "🔐 Для продолжения требуется лицензионный ключ (ТЕСТ 3)"
 echo -e "Если хотите прервать ввод ключа — нажмите Ctrl + C"
 echo
 
+# URL файла с хешами ключей
 KEYS_URL="https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/keys.sha256"
 
-MAX_ATTEMPTS=10
-attempts_left=$MAX_ATTEMPTS
-
-while [ $attempts_left -gt 0 ]; do
-    read -p "Введите ключ (осталось попыток: $attempts_left): " KEY
-
-    KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
-
-        # Проверяем хеш напрямую из GitHub без скачивания файла
-    if curl -fsSL "$KEYS_URL" | tr -d '\r' | grep -Fx "$KEY_HASH" >/dev/null; then
-        echo -e "${GREEN}✔ Ключ подтверждён.${NC}"
-        break
+# Функция проверки ключа
+validate_license_key() {
+    local input_key="$1"
+    local key_hash
+    
+    # Генерируем SHA256 хеш от введенного ключа
+    key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
+    
+    # Проверяем наличие хеша в онлайн-файле
+    if curl -fsSL "$KEYS_URL" | grep -q "^$key_hash$"; then
+        return 0
+    else
+        return 1
     fi
+}
 
-    attempts_left=$((attempts_left - 1))
-    echo -en "\r${RED}❌ Неверный ключ.${NC}\n"
+MAX_ATTEMPTS=5
+attempts_left=$MAX_ATTEMPTS
+KEY_VALIDATED=0
+
+while [ $attempts_left -gt 0 ] && [ $KEY_VALIDATED -eq 0 ]; do
+    safe_read "${YELLOW}Введите лицензионный ключ (осталось попыток: $attempts_left):${NC} " LICENSE_KEY
+
+    if validate_license_key "$LICENSE_KEY"; then
+        echo -e "${GREEN}✅ Лицензионный ключ подтверждён. Продолжаем установку...${NC}"
+        KEY_VALIDATED=1
+        break
+    else
+        attempts_left=$((attempts_left - 1))
+        if [ $attempts_left -gt 0 ]; then
+            echo -e "${RED}❌ Неверный ключ. Попробуйте еще раз.${NC}"
+            echo
+        fi
+    fi
 done
 
-if [ $attempts_left -eq 0 ]; then
+if [ $KEY_VALIDATED -eq 0 ]; then
     echo -e "${RED}❌ Лимит попыток исчерпан. Установка остановлена.${NC}"
+    echo -e "${YELLOW}Для получения ключа обратитесь к разработчику.${NC}"
     exit 1
 fi
+
+echo
 
 
 
