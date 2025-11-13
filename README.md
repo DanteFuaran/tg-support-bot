@@ -91,9 +91,11 @@ nano .env
 <br>
 
 ### ⚠️ Обязательно заполните файл `.env` перед запуском
-> `BOT_TOKEN — токен вашего Telegram-бота`<br>
-> `SUPPORT_GROUP_ID — ID группы поддержки`<br>
-> `INACTIVITY_DAYS — через сколько дней автоматически закрывать тикеты`<br>
+```bash
+BOT_TOKEN — токен вашего Telegram-бота
+SUPPORT_GROUP_ID — ID группы поддержки
+INACTIVITY_DAYS — через сколько дней автоматически закрывать тикеты
+```
 
 <br>
 
