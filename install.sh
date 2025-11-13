@@ -84,8 +84,8 @@ while [ $attempts_left -gt 0 ]; do
 
     KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
 
-    # Проверяем хеш напрямую из GitHub без скачивания файла
-    if curl -fsSL "$KEYS_URL" | tr -d '\r' | grep -Fq "$KEY_HASH"; then
+        # Проверяем хеш напрямую из GitHub без скачивания файла
+    if curl -fsSL "$KEYS_URL" | tr -d '\r' | grep -Fxq "$KEY_HASH"; then
         echo -e "${GREEN}✔ Ключ подтверждён.${NC}"
         break
     fi
