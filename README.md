@@ -41,6 +41,9 @@ ___
 ```bash
 wget https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/install.sh -O install.sh && chmod +x install.sh && sudo ./install.sh && rm install.sh
 ```
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/install.sh)
+```
 
 ### 📦 Что делает скрипт:
 + Обновит систему и установит все зависимости
