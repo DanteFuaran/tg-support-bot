@@ -13,6 +13,23 @@ WHITE='\033[1;37m'
 NC='\033[0m'
 trap 'tput sgr0 >/dev/null 2>&1 || true' EXIT
 
+# === Проверка ключа ===
+KEY_FILE="/dfc-online/tg-support-bot/keys.sha256"
+
+echo
+echo -e "${BLUE}🔐 Для продолжения требуется ключ активации.${NC}"
+read -p "Введите ключ: " KEY
+
+KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
+
+if ! grep -Fxq "$KEY_HASH" "$KEY_FILE"; then
+    echo -e "${RED}❌ Неверный ключ.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✔ Ключ подтверждён.${NC}"
+sleep 1
+
 INSTALL_DIR="/dfc-online/tg-support-bot"
 SERVICE_FILE="/etc/systemd/system/tg-support-bot.service"
 CLI_FILE="/usr/local/bin/tg-support-bot"
