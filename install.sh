@@ -81,39 +81,25 @@ validate_license_key() {
     local input_key="$1"
     local key_hash
     
+    # Генерируем SHA256 хеш от введенного ключа
     key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
-    remote_hash=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | awk '{print $1}')
     
-    [ "$key_hash" = "$remote_hash" ]
-}
-
-MAX_ATTEMPTS=5
-attempts_left=$MAX_ATTEMPTS
-KEY_VALIDATED=0
-
-while [ $attempts_left -gt 0 ] && [ $KEY_VALIDATED -eq 0 ]; do
-    safe_read "${YELLOW}Введите лицензионный ключ (осталось попыток: $attempts_left):${NC} " LICENSE_KEY
-
-    if validate_license_key "$LICENSE_KEY"; then
-        echo -e "${GREEN}✅ Лицензионный ключ подтверждён${NC}"
-        KEY_VALIDATED=1
-        break
-    else
-        attempts_left=$((attempts_left - 1))
-        if [ $attempts_left -gt 0 ]; then
-            echo -e "${RED}❌ Неверный ключ. Попробуйте еще раз.${NC}"
-            echo
-        fi
+    # Получаем все хеши и проверяем наличие
+    local remote_hashes
+    remote_hashes=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | sed 's/[[:space:]]*$//')
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Ошибка: Не удалось загрузить файл ключей${NC}"
+        return 1
     fi
-done
-
-if [ $KEY_VALIDATED -eq 0 ]; then
-    echo -e "${RED}❌ Лимит попыток исчерпан. Установка отменена.${NC}"
-    echo -e "${YELLOW}Для получения ключа обратитесь к разработчику.${NC}"
-    exit 1
-fi
-
-echo
+    
+    # Проверяем наличие хеша в списке
+    if echo "$remote_hashes" | grep -q "^$key_hash$"; then
+        return 0
+    else
+        return 1
+    fi
+}
 
 
 
