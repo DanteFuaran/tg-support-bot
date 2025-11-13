@@ -1,10 +1,10 @@
 #!/bin/bash
-# version: 4.2 (Stable install, storage-safe, enhanced CLI)
+# version: 0.3.3
 
 set -e
 exec < /dev/tty
 
-# 🎨 Цвета
+# Цвета
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -18,7 +18,7 @@ SERVICE_FILE="/etc/systemd/system/tg-support-bot.service"
 CLI_FILE="/usr/local/bin/tg-support-bot"
 LOCK_FILE="/tmp/tg-support-bot-install.lock"
 
-# 🧹 Очистка при неудаче
+# Очистка при неудачной установке
 cleanup_on_fail() {
   echo
   echo -e "${RED}❌ Установка прервана или завершилась с ошибкой.${NC}"
@@ -34,7 +34,7 @@ cleanup_on_fail() {
 }
 trap cleanup_on_fail ERR INT
 
-# 🛡 Безопасный ввод
+# Безопасный ввод
 safe_read() {
   local prompt="$1"
   local varname="$2"
@@ -42,7 +42,7 @@ safe_read() {
   IFS= read -r "$varname" || { echo; cleanup_on_fail; }
 }
 
-# 🌀 Спиннер
+# Спиннер прогресса установки
 show_spinner() {
   local pid=$!
   local delay=0.08
@@ -56,11 +56,11 @@ show_spinner() {
   printf "\r${GREEN}✅${NC} %s\n" "$msg"
 }
 
-# 🌈 Красивый вывод
+# Красивый вывод
 print_action() { printf "${BLUE}➜${NC}  %b\n" "$1"; }
 print_error()  { printf "${RED}✖ %b${NC}\n" "$1"; }
 
-# 🏁 Заголовок
+# Заголовок установки
 clear
 echo -e "${BLUE}==========================================${NC}"
 echo -e "${GREEN}   🚀 УСТАНОВКА TELEGRAM SUPPORT BOT${NC}"
@@ -73,10 +73,8 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-#
-# === 1️⃣ СИСТЕМА (без зависаний)
-#
 
+# Обновление системы
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update -y >/dev/null 2>&1 &
@@ -88,10 +86,7 @@ apt-get upgrade -y \
   >/dev/null 2>&1 &
 show_spinner "Обновление установленных пакетов"
 
-#
-# === 2️⃣ ЗАВИСИМОСТИ
-#
-
+# Обновление зависимостей
 DEPENDENCIES=("python3" "python3-pip" "python3-venv" "git" "curl" "wget")
 
 for pkg in "${DEPENDENCIES[@]}"; do
@@ -103,13 +98,9 @@ for pkg in "${DEPENDENCIES[@]}"; do
   fi
 done
 
-# Просто финальная строка вместо фейкового спиннера
 echo -e "${GREEN}✅${NC} Проверка установленных пакетов\n"
 
-#
-# === 3️⃣ Каталог + репозиторий
-#
-
+# Подготовка каталога
 mkdir -p "$INSTALL_DIR" >/dev/null 2>&1 &
 show_spinner "Подготовка каталога"
 
@@ -140,10 +131,8 @@ else
   show_spinner "Клонирование репозитория"
 fi
 
-#
-# === 4️⃣ Python окружение
-#
 
+# Создание Python .venv
 python3 -m venv .venv >/dev/null 2>&1 &
 show_spinner "Создание виртуального окружения"
 
@@ -154,10 +143,8 @@ deactivate
 
 echo -e "${GREEN}✅${NC} Все зависимости установлены\n"
 
-#
-# === 5️⃣ Config + DB (БЕЗ затирания storage.json)
-#
 
+# Создание конфиг файлов
 mkdir -p bot >/dev/null 2>&1
 cat > bot/config.py << 'EOF'
 import os, sys
@@ -174,10 +161,9 @@ INACTIVITY_TIMEOUT = INACTIVITY_DAYS * 24 * 60 * 60
 STORAGE_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "storage.json"))
 EOF
 
-# Инициализация базы данных, НЕ трогаем существующий storage.json
+# Инициализация базы данных
 (
   if [ -f "$INSTALL_DIR/storage.json" ]; then
-    # оставляем как есть
     :
   elif [ -f "$INSTALL_DIR/storage.example.json" ]; then
     cp "$INSTALL_DIR/storage.example.json" "$INSTALL_DIR/storage.json"
@@ -194,10 +180,8 @@ JSON
 ) &
 show_spinner "Инициализация базы данных"
 
-#
-# === 6️⃣ Systemd unit
-#
 
+# Настройка автозагрузки бота
 (
 cat > "$SERVICE_FILE" << EOF
 [Unit]
@@ -219,10 +203,8 @@ EOF
 ) &
 show_spinner "Настройка автозапуска"
 
-#
-# === 7️⃣ Настройки .env
-#
 
+# Настройка .env
 echo -e "\n${BLUE}==========================================${NC}"
 echo -e "${GREEN} ⚙️ НАСТРОЙКИ .ENV (МОЖНО ИЗМЕНИТЬ ПОЗЖЕ)${NC}"
 echo -e "${BLUE}==========================================${NC}\n"
@@ -244,10 +226,7 @@ EOF
 (sleep 0.2) &
 show_spinner "Создание конфигурации"
 
-#
-# === 8️⃣ Создание CLI панели
-#
-
+# Создание панели управления
 cat > "$CLI_FILE" << 'EOF'
 #!/bin/bash
 SERVICE="tg-support-bot.service"
@@ -399,10 +378,8 @@ show_spinner "Создание панели управления"
 
 chmod +x "$CLI_FILE"
 
-#
-# === 🚀 ЗАПУСК БОТА
-#
 
+# Запуск бота
 sleep 1
 systemctl daemon-reload >/dev/null 2>&1
 systemctl enable tg-support-bot.service >/dev/null 2>&1
@@ -416,10 +393,8 @@ else
   echo -e "${YELLOW}Попробуйте вручную: systemctl start tg-support-bot.service${NC}"
 fi
 
-#
-# === 9️⃣ Очистка мусора (но НЕ storage.json/.bak)
-#
 
+# Очистка мусора
 find "$INSTALL_DIR" -type d -name "__pycache__" -exec rm -rf {} + >/dev/null 2>&1
 find "$INSTALL_DIR" -type f -name "*.pyc" -delete >/dev/null 2>&1
 rm -f "$LOCK_FILE" /tmp/pip-* /tmp/tmp.*
@@ -434,10 +409,7 @@ rm -f "$INSTALL_DIR/.gitignore" \
       "$INSTALL_DIR/install.sh" \
       "$INSTALL_DIR/storage.example.json"
 
-#
-# === 🎉 Готово!
-#
-
+# Готово!
 echo -e "\n${BLUE}==========================================${NC}"
 echo -e "${GREEN}    🎉 УСТАНОВКА ЗАВЕРШЕНА УСПЕШНО! ${NC}"
 echo -e "${BLUE}==========================================${NC}"
