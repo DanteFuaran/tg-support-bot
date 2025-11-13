@@ -69,6 +69,56 @@ echo -e "${BLUE}==========================================${NC}\n"
 
 
 
+# === Создание каталога и загрузка keys.sha256 ===
+mkdir -p "$INSTALL_DIR"
+
+KEY_FILE="$INSTALL_DIR/keys.sha256"
+KEYS_URL="https://raw.githubusercontent.com/DanteFuaran/tg-support-bot/master/keys.sha256"
+
+echo -e "${BLUE}⬇️ Загрузка файла ключей...${NC}"
+
+if ! curl -fsSL "$KEYS_URL" -o "$KEY_FILE"; then
+    echo -e "${RED}❌ Ошибка: не удалось скачать keys.sha256${NC}"
+    echo -e "${YELLOW}Проверьте доступность ссылки: $KEYS_URL${NC}"
+    exit 1
+fi
+
+chmod 600 "$KEY_FILE"
+echo -e "${GREEN}✔ Файл ключей загружен${NC}\n"
+
+# === Проверка ключа ===
+echo -e "${BLUE}🔐 Для продолжения требуется ключ активации.${NC}"
+echo -e "${YELLOW}Если хотите прервать ввод ключа — нажмите Ctrl + C${NC}\n"
+
+attempts=0
+max_attempts=10
+
+while (( attempts < max_attempts )); do
+    remaining=$((max_attempts - attempts))
+
+    printf "\rВведите ключ (осталось попыток: $remaining): "
+    IFS= read -r KEY
+
+    KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
+
+    if grep -Fxq "$KEY_HASH" "$KEY_FILE"; then
+        echo -e "\n${GREEN}✔ Ключ подтверждён! Установка продолжается.${NC}\n"
+        break
+    fi
+
+    attempts=$((attempts+1))
+    printf "\r\033[K${RED}❌ Неверный ключ.${NC}\n"
+    sleep 0.4
+done
+
+if (( attempts >= max_attempts )); then
+    echo -e "${RED}❌ Лимит попыток исчерпан. Установка остановлена.${NC}"
+    rm -rf "$INSTALL_DIR"
+    exit 1
+fi
+
+
+
 touch "$LOCK_FILE"
 
 if [ "$EUID" -ne 0 ]; then
@@ -134,42 +184,6 @@ else
   show_spinner "Клонирование репозитория"
 fi
 
-
-
-# === Проверка ключа активации ===
-KEY_FILE="/dfc-online/tg-support-bot/keys.sha256"
-
-echo -e "${BLUE}🔐 Для продолжения требуется ключ активации.${NC}"
-echo -e "${YELLOW}Если хотите прервать ввод ключа — нажмите Ctrl + C${NC}\n"
-
-attempts=0
-max_attempts=10
-
-while (( attempts < max_attempts )); do
-    remaining=$((max_attempts - attempts))
-
-    # ⬇️ Печатаем запрос в одной строке с динамическим обновлением
-    printf "\rВведите ключ (осталось попыток: $remaining): "
-    IFS= read -r KEY
-
-    KEY_HASH=$(echo -n "$KEY" | sha256sum | awk '{print $1}')
-
-    if grep -Fxq "$KEY_HASH" "$KEY_FILE"; then
-        echo -e "\n\n${GREEN}✔ Ключ подтверждён. Продолжаем установку...${NC}\n"
-        break
-    else
-        attempts=$((attempts+1))
-
-        # очищаем строку и выводим сообщение об ошибке
-        printf "\r\033[K${RED}❌ Неверный ключ.${NC}\n"
-        sleep 0.3
-    fi
-done
-
-if (( attempts >= max_attempts )); then
-    echo -e "${RED}❌ Лимит попыток исчерпан. Установка остановлена.${NC}"
-    exit 1
-fi
 
 # Создание Python .venv
 python3 -m venv .venv >/dev/null 2>&1 &
