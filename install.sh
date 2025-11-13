@@ -82,19 +82,10 @@ validate_license_key() {
     local input_key="$1"
     local key_hash
     
-    # Генерируем SHA256 хеш от введенного ключа
     key_hash=$(echo -n "$input_key" | sha256sum | awk '{print $1}')
+    remote_hash=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | awk '{print $1}')
     
-    # Получаем и очищаем хеш из файла
-    local remote_hash
-    remote_hash=$(curl -fsSL "$KEYS_URL" | tr -d '\r' | sed 's/[[:space:]]*$//')
-    
-    # Простое сравнение строк
-    if [ "$key_hash" = "$remote_hash" ]; then
-        return 0
-    else
-        return 1
-    fi
+    [ "$key_hash" = "$remote_hash" ]
 }
 
 MAX_ATTEMPTS=5
